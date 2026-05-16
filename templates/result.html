@@ -1,0 +1,303 @@
+<!-- result.html - обновленный -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - Token Checker</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-area">
+                    <div class="logo">
+                        <i class="fab fa-telegram"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>Verification Results</h1>
+                        <p>{{ stats.total }} tokens • {{ processing_time }}</p>
+                    </div>
+                </div>
+
+                <div class="user-area">
+                    <div class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        <span>{{ username }}</span>
+                    </div>
+                    <a href="/logout" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main class="main">
+            <div class="stats-container">
+                <div class="stat-card total">
+                    <div class="stat-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Total Tokens</h3>
+                        <p class="stat-number">{{ stats.total }}</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card active">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Active Tokens</h3>
+                        <p class="stat-number">{{ stats.active }}</p>
+                        <p class="stat-percent">
+                            {% if stats.total > 0 %}
+                                {{ (stats.active / stats.total * 100) | round(1) }}% success rate
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="stat-card inactive">
+                    <div class="stat-icon">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Inactive Tokens</h3>
+                        <p class="stat-number">{{ stats.inactive }}</p>
+                        <p class="stat-percent">
+                            {% if stats.total > 0 %}
+                                {{ (stats.inactive / stats.total * 100) | round(1) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions-bar">
+                <button id="exportValidBtn" class="action-btn success">
+                    <i class="fas fa-file-export"></i> Export Active Tokens
+                </button>
+                <button id="exportAllBtn" class="action-btn">
+                    <i class="fas fa-download"></i> Export All Tokens
+                </button>
+                <button id="copyValidBtn" class="action-btn success">
+                    <i class="fas fa-copy"></i> Copy Active Tokens
+                </button>
+                <a href="/" class="action-btn primary">
+                    <i class="fas fa-upload"></i> New Verification
+                </a>
+            </div>
+
+            <div class="results-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-list-check"></i> Token Verification Results</h2>
+                    <div class="table-info">{{ results|length }} tokens processed</div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="tokens-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Status</th>
+                                <th>Token</th>
+                                <th>Username</th>
+                                <th>Bot Name</th>
+                                <th>Bot ID</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for token in results %}
+                            <tr>
+                                <td style="color: var(--text-dim); font-weight: 600; text-align: center;">{{ loop.index }}</td>
+                                <td>
+                                    {% if token.status == 'active' %}
+                                    <span class="status-badge active">
+                                        <i class="fas fa-check"></i> Active
+                                    </span>
+                                    {% elif token.status == 'invalid' %}
+                                    <span class="status-badge invalid">
+                                        <i class="fas fa-times"></i> Invalid
+                                    </span>
+                                    {% elif token.status == 'unauthorized' %}
+                                    <span class="status-badge unauthorized">
+                                        <i class="fas fa-user-slash"></i> Unauthorized
+                                    </span>
+                                    {% elif token.status == 'forbidden' %}
+                                    <span class="status-badge error">
+                                        <i class="fas fa-ban"></i> Forbidden
+                                    </span>
+                                    {% else %}
+                                    <span class="status-badge error">
+                                        <i class="fas fa-exclamation"></i> Error
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="token-display">
+                                        <code class="token-preview">{{ token.token[:15] }}...{{ token.token[-10:] }}</code>
+                                        <button class="copy-token-btn" data-token="{{ token.token }}" title="Copy token">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if token.username %}
+                                        <span style="color: var(--telegram); font-weight: 500;">@{{ token.username }}</span>
+                                    {% else %}
+                                        <span style="color: var(--text-dim); font-style: italic;">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ token.name or '<span style="color: var(--text-dim); font-style: italic;">—</span>'|safe }}</td>
+                                <td>
+                                    {% if token.id %}
+                                        <code style="color: var(--text); font-family: 'SF Mono', monospace;">{{ token.id }}</code>
+                                    {% else %}
+                                        <span style="color: var(--text-dim); font-style: italic;">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        {% if token.status == 'active' and token.username %}
+                                        <a href="https://t.me/{{ token.username }}" target="_blank" class="action-btn-small" title="Open in Telegram">
+                                            <i class="fab fa-telegram"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 25px; margin-top: 25px;">
+                <h3 style="font-size: 16px; color: var(--text-dim); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-chart-line"></i> Verification Summary
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 8px; font-weight: 500;">Filename</div>
+                        <div style="font-size: 14px; color: var(--text); font-weight: 600;">{{ filename }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 8px; font-weight: 500;">Verified at</div>
+                        <div style="font-size: 14px; color: var(--text); font-weight: 600;">{{ checked_at }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 8px; font-weight: 500;">Processing Time</div>
+                        <div style="font-size: 14px; color: var(--text); font-weight: 600;">{{ processing_time }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 8px; font-weight: 500;">Success Rate</div>
+                        <div style="font-size: 14px; color: var(--success); font-weight: 700;">
+                            {% if stats.total > 0 %}
+                                {{ (stats.active / stats.total * 100) | round(1) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Verification completed • Processed {{ stats.total }} tokens • {{ checked_at }}</p>
+        </footer>
+    </div>
+
+    <script>
+        const validTokens = {{ valid_tokens|tojson|safe }};
+        const allTokens = {{ results|tojson|safe }};
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `flash flash-${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}"></i>
+                ${message}
+            `;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '1000';
+            notification.style.maxWidth = '300px';
+            notification.style.animation = 'slideIn 0.3s ease-out';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('Copied to clipboard', 'success');
+            }).catch(() => {
+                showNotification('Failed to copy', 'error');
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.copy-token-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const token = this.getAttribute('data-token');
+                    if (token) copyToClipboard(token);
+                });
+            });
+            
+            document.getElementById('exportValidBtn').addEventListener('click', function() {
+                if (validTokens.length === 0) {
+                    showNotification('No active tokens to export', 'error');
+                    return;
+                }
+                const content = validTokens.map(t => t.token).join('\n');
+                downloadFile(content, 'active_tokens.txt');
+                showNotification('Active tokens exported', 'success');
+            });
+            
+            document.getElementById('exportAllBtn').addEventListener('click', function() {
+                const content = allTokens.map(t => t.token).join('\n');
+                downloadFile(content, 'all_tokens.txt');
+                showNotification('All tokens exported', 'success');
+            });
+            
+            document.getElementById('copyValidBtn').addEventListener('click', function() {
+                if (validTokens.length === 0) {
+                    showNotification('No active tokens to copy', 'error');
+                    return;
+                }
+                const tokens = validTokens.map(t => t.token).join('\n');
+                copyToClipboard(tokens);
+            });
+        });
+        
+        function downloadFile(content, filename) {
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

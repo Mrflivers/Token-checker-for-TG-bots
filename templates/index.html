@@ -1,0 +1,171 @@
+<!-- index.html - обновленный -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Token Checker</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-area">
+                    <div class="logo">
+                        <i class="fab fa-telegram"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>Token Checker</h1>
+                        <p>Secure Telegram Bot Verification</p>
+                    </div>
+                </div>
+
+                <div class="user-area">
+                    <div class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        <span>{{ username }}</span>
+                    </div>
+                    <a href="/logout" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main class="main">
+            <div class="upload-card">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                
+                <h2>Upload Token File</h2>
+                <p class="upload-description">Upload a .txt file containing Telegram bot tokens for verification</p>
+                
+                <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+                    <div class="file-upload">
+                        <input type="file" name="file" id="fileInput" accept=".txt" required>
+                        <label for="fileInput" class="file-label" id="fileLabel">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Drag & Drop or Click to Browse</span>
+                            <div id="fileName">.txt files only</div>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-search"></i> Verify Tokens
+                    </button>
+                </form>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-messages">
+                            {% for category, message in messages %}
+                                <div class="flash flash-{{ category }}">
+                                    <i class="fas fa-{% if category == 'error' %}exclamation{% elif category == 'success' %}check{% elif category == 'warning' %}exclamation{% else %}info{% endif %}"></i>
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <div style="margin-top: 30px; padding-top: 25px; border-top: 1px solid var(--border);">
+                    <h3 style="font-size: 14px; color: var(--text-dim); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-info-circle"></i> File Format Example
+                    </h3>
+                    <div style="background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 12px;">
+                        <pre style="color: var(--text-dim); font-family: 'SF Mono', monospace; font-size: 12px; line-height: 1.4; white-space: pre-wrap;">1234567890:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw
+2345678901:BBHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw
+# Tokens are extracted from any text format</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Fast Verification</h3>
+                    <p>Multiple tokens processed simultaneously for quick results</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Secure Processing</h3>
+                    <p>Tokens are processed securely with partial masking</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>Detailed Analytics</h3>
+                    <p>Comprehensive statistics and status breakdown</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <h3>Export Results</h3>
+                    <p>Export active tokens or full results for further use</p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Telegram Token Checker • Secure Edition • © 2024</p>
+        </footer>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileLabel = document.getElementById('fileLabel');
+        const fileName = document.getElementById('fileName');
+
+        fileInput.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                fileName.textContent = `Selected: ${this.files[0].name}`;
+                fileName.className = 'file-selected';
+                fileLabel.classList.add('drag-over');
+                setTimeout(() => fileLabel.classList.remove('drag-over'), 1000);
+            } else {
+                fileName.textContent = '.txt files only';
+                fileName.className = '';
+            }
+        });
+
+        // Drag and drop functionality
+        fileLabel.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileLabel.classList.add('drag-over');
+        });
+
+        fileLabel.addEventListener('dragleave', () => {
+            fileLabel.classList.remove('drag-over');
+        });
+
+        fileLabel.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileLabel.classList.remove('drag-over');
+            
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                const event = new Event('change', { bubbles: true });
+                fileInput.dispatchEvent(event);
+            }
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                submitBtn.disabled = true;
+            }
+        });
+    </script>
+</body>
+</html>
