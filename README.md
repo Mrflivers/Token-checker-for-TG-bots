@@ -21,7 +21,7 @@
 
 1. Клонируйте репозиторий:
 ```bash
-git clone https://github.com/yourusername/telegram-token-checker.git
+git clone https://github.com/Mrflivers/---Telegram-BotFather-
 cd telegram-token-checker
 ```
 
