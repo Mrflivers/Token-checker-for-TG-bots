@@ -115,11 +115,7 @@ telegram-token-checker/
 
 ## 👤 Автор
 
-**mr_fliver**
-
-## 🤝 Вклад
-
-Pull requests приветствуются!
+**mr_FLIVER**
 
 ---
 
